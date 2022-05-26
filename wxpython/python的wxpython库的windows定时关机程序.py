@@ -1,5 +1,5 @@
 # coding=utf-8
-import wx#wx是gui界面库
+import wx
 from threading import Thread
 from os import system
 from time import sleep,localtime
@@ -20,15 +20,22 @@ minute=[str(i) for i in range(0,60)]
 class chuangkou(wx.Frame):#窗口的类
     def __init__(self):
         '''
+        参数
+
+        方法体
+        ①start_button()#开始定时关机按钮绑定的函数
+        ②shut_down()执行关机的函数
+        '''
+        self.g=Thread(target=self.shut_down)#创建循环判断是否关机的线程
+        self.g.start()#启动关机的线程
+        '''
         添加成员区域
         '''
         super(chuangkou,self).__init__(None,-1,title='Windows定时关机软件',size=(600,600))#调用父类创建窗口
-        self.g=Thread(target=self.shut_down)#创建一个关机的线程
+
         self.a=wx.Panel(self)#创建画板
         self.b=wx.StaticText(self.a,label="请选择关机的时间")#文字提示
-
         self.f=wx.StaticText(self.a,label="绿色=开启，灰色=关闭")#文字提示
-
         self.i=wx.ComboBox(self.a,value=str(localtime().tm_year),choices=year)#选择年份框
         self.j=wx.ComboBox(self.a,value=str(localtime().tm_mon),choices=month)#选择月份框
         self.k=wx.ComboBox(self.a,value=str(localtime().tm_mday),choices=day)#选择天框
@@ -37,7 +44,7 @@ class chuangkou(wx.Frame):#窗口的类
         '''
         成员的绑定函数区域
         '''
-        self.h=wx.Button(self.a,label ='开始定时关机')#开始按钮h
+        self.h=wx.Button(self.a,label ='开始定时关机')#开始按钮
         self.h.Bind(wx.EVT_BUTTON,self.start_button)#开始按钮绑定的函数
         '''
         成员的布局区域
@@ -56,39 +63,47 @@ class chuangkou(wx.Frame):#窗口的类
 
         self.a.SetSizer(box1)#在a画板上
 
-    def start_button(self,can):#按钮绑定函数
-        if self.h.GetLabel()=="开始定时关机":#如果按钮名字是"开始定时"则执行
+    def start_button(self,can):#开始定时关机按钮绑定的函数
+        '''
+        本函数的作用就是当点击定时关机按钮时 改变按钮的名称和颜色
+        '''
+        if self.h.GetLabel()=="开始定时关机":#如果按钮名字是"开始定时关机"则执行
             print("开始了定时")
-            self.h.SetLabel("关闭定时关机")#按钮名改成"关闭定时"
+            self.h.SetLabel("关闭定时关机")#按钮名改成"关闭定时关机"
             self.h.SetBackgroundColour("#00FF00")#按钮变成绿色
-            try:
-                self.g.start()#启动关机的线程
-            except:
-                print("开启线程失败，已经开启了关机线程！")
-        elif self.h.GetLabel()=="关闭定时关机":#如果按钮名字是"关闭定时"则执行
+
+        elif self.h.GetLabel()=="关闭定时关机":#如果按钮名字是"关闭定时关机"则执行
             print("关闭了定时")
-            self.h.SetLabel("开始定时关机")#按钮名改成"开始定时"
+            self.h.SetLabel("开始定时关机")#按钮名改成"开始定时关机"
             self.h.SetBackgroundColour(None)#按钮变成灰色
 
     def shut_down(self):
-        __panduan=0
+        '''
+        循环的判断当前时间是否是输入的关机时间
+        是则执行关机操作
+        否则不执行
+        '''
+        __judge=0#用于判断是否关机，如果是0就开启定时关机并且加1 不重复执行关机操作，如果是1就取消定时关机
         while True:
-            sleep(1)
-            __time=localtime()
-            if self.h.GetLabel()=="关闭定时关机":
+            sleep(1)#休眠1秒，避免cpu负荷过高
+            __time=localtime()#获取现在的时间
+
+            if self.h.GetLabel()=="关闭定时关机":#如果按钮的名称变成了关闭定时关机就执行
+                #如果当前时间等于选择框中选中的时间则执行定时关机操作
                 if str(__time.tm_year)+str(__time.tm_mon)+str(__time.tm_mday)+str(__time.tm_hour)+str(__time.tm_min)==\
                    self.i.GetValue()+self.j.GetValue()+self.k.GetValue()+self.d.GetValue()+self.e.GetValue():
-                    if __panduan==0:
+                    if __judge==0:#如果没开启关机操作就执行1分钟后关机
                         print('开始定时关机')
-                        system('shutdown -s -f')
-                        __panduan+=1
+                        system('shutdown -s -f')#执行1分钟后关机
+                        __judge+=1#加1的目的是避免重复执行
                     else:
                         continue
-            else:
-                if __panduan==1:
+
+            else:#如果按钮的名称不是关闭定时关机就执行
+                if __judge==1:#如果开启关机操作就取消
                     print('取消定时关机')
-                    system('shutdown -a')
-                    __panduan-=1
+                    system('shutdown -a')#执行取消1分钟后关机
+                    __judge-=1#减1的目的是让__judge变回0
                 else:
                     continue
                 
